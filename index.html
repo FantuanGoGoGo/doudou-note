@@ -647,8 +647,8 @@ body::before {
     <div class="set-row action" id="importJsonBtn">
       <span class="set-label">导入 JSON</span>
       <span class="set-value">→</span>
-      <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
+    <input type="file" id="importFile" accept="application/json,.json,.txt,text/plain" hidden>
     <div class="set-row danger" id="clearBtn">
       <span class="set-label">清空所有数据</span>
       <span class="set-value">⚠</span>
@@ -828,6 +828,8 @@ function openSheet(id) {
   const backdrop = document.getElementById('recordBackdrop');
   const title = document.getElementById('sheetTitle');
   const delBtn = document.getElementById('deleteBtn');
+  delBtn.dataset.confirming = '';
+  delBtn.textContent = '删除';
 
   if (id) {
     const r = state.records.find(x => x.id === id);
@@ -878,12 +880,26 @@ function saveRecord() {
 
 function deleteRecord() {
   if (!state.editingId) return;
-  if (!confirm('删除这条记录?')) return;
-  state.records = state.records.filter(r => r.id !== state.editingId);
-  persist();
-  closeSheet();
-  render();
-  toast('已删除');
+  const btn = document.getElementById('deleteBtn');
+  if (btn.dataset.confirming === '1') {
+    // second tap: actually delete
+    state.records = state.records.filter(r => r.id !== state.editingId);
+    persist();
+    closeSheet();
+    render();
+    toast('已删除');
+    return;
+  }
+  // first tap: ask for confirmation inline
+  btn.dataset.confirming = '1';
+  btn.textContent = '再点一次确认';
+  setTimeout(() => {
+    // auto reset after 3 seconds if user didn't tap again
+    if (btn.dataset.confirming === '1') {
+      btn.dataset.confirming = '';
+      btn.textContent = '删除';
+    }
+  }, 3000);
 }
 
 // =========== Settings ===========
@@ -934,37 +950,79 @@ function exportCSV() {
 
 function importJSON(file) {
   const reader = new FileReader();
+  reader.onerror = () => {
+    alert('读取文件失败: ' + (reader.error ? reader.error.message : '未知错误'));
+  };
   reader.onload = e => {
     try {
-      const obj = JSON.parse(e.target.result);
-      if (!obj.records || !Array.isArray(obj.records)) throw new Error('格式错误');
-      const ok = confirm(`将导入 ${obj.records.length} 条记录,会与现有记录合并。继续?`);
-      if (!ok) return;
-      // merge by id
+      const text = e.target.result;
+      if (!text || typeof text !== 'string') {
+        throw new Error('文件内容为空');
+      }
+      let obj;
+      try {
+        obj = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error('JSON 解析失败: ' + parseErr.message);
+      }
+      if (!obj || typeof obj !== 'object') {
+        throw new Error('文件不是有效的 JSON 对象');
+      }
+      if (!obj.records || !Array.isArray(obj.records)) {
+        throw new Error('找不到 records 数组');
+      }
+      if (obj.records.length === 0) {
+        throw new Error('records 数组是空的');
+      }
+      // merge by id, no confirm needed (user already chose to import)
       const map = new Map(state.records.map(r => [r.id, r]));
+      let imported = 0;
       obj.records.forEach(r => {
-        if (r.id && r.date) map.set(r.id, r);
+        if (r.id && r.date) {
+          map.set(r.id, {
+            id: String(r.id),
+            date: String(r.date),
+            cash: parseFloat(r.cash) || 0,
+            card: parseFloat(r.card) || 0,
+            base: parseFloat(r.base) || 0
+          });
+          imported++;
+        }
       });
       state.records = [...map.values()];
       if (typeof obj.defaultBase === 'number') state.defaultBase = obj.defaultBase;
       persist();
       render();
-      toast(`已导入 ${obj.records.length} 条`);
+      toast(`已导入 ${imported} 条`);
     } catch (err) {
       alert('导入失败: ' + err.message);
+      console.error('Import error:', err);
     }
   };
   reader.readAsText(file);
 }
 
 function clearAll() {
-  if (!confirm('确定清空全部记录吗?此操作不可撤销。建议先导出备份。')) return;
-  if (!confirm('再次确认: 真的要清空全部数据吗?')) return;
-  state.records = [];
-  persist();
-  render();
-  closeSettings();
-  toast('已清空');
+  const btn = document.getElementById('clearBtn');
+  const label = btn.querySelector('.set-label');
+  if (btn.dataset.confirming === '1') {
+    state.records = [];
+    persist();
+    render();
+    closeSettings();
+    toast('已清空');
+    btn.dataset.confirming = '';
+    label.textContent = '清空所有数据';
+    return;
+  }
+  btn.dataset.confirming = '1';
+  label.textContent = '⚠ 再点一次确认清空(建议先导出备份)';
+  setTimeout(() => {
+    if (btn.dataset.confirming === '1') {
+      btn.dataset.confirming = '';
+      label.textContent = '清空所有数据';
+    }
+  }, 4000);
 }
 
 // =========== Toast ===========
