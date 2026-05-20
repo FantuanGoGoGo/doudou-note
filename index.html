@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="豆豆账本">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#1a1612" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5efe3" media="(prefers-color-scheme: light)">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a1612'/><text x='90' y='128' font-family='Georgia,serif' font-size='110' font-weight='600' text-anchor='middle' fill='%23d4a574'>$</text></svg>">
+<title>豆豆账本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #1a1612;
+  --surface: #221d17;
+  --surface-2: #2a241d;
+  --border: #3a342b;
+  --border-strong: #4a4338;
+  --text: #f0e8d6;
+  --text-2: #a89b83;
+  --text-3: #6b6051;
+  --accent: #d4a574;
+  --accent-dim: #b88a5a;
+  --sage: #8aa88f;
+  --danger: #c97864;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5efe3;
+    --surface: #fbf7ed;
+    --surface-2: #f0e9d8;
+    --border: #e3dac6;
+    --border-strong: #cdc0a4;
+    --text: #2a2520;
+    --text-2: #6b5f4e;
+    --text-3: #9a8e7a;
+    --accent: #a87544;
+    --accent-dim: #8a5d33;
+    --sage: #5d7e62;
+    --danger: #a8453a;
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(60,40,20,0.08);
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', -apple-system, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  position: relative;
+}
+
+/* subtle grain texture overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+.app { max-width: 560px; margin: 0 auto; padding: 0 20px 120px; position: relative; z-index: 1; }
+
+/* ===== Header ===== */
+.header {
+  padding: 28px 0 18px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variation-settings: "opsz" 96, "SOFT" 50;
+}
+.brand-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 4px;
+  letter-spacing: 0.01em;
+}
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.icon-btn:active { transform: scale(0.92); background: var(--surface); }
+.icon-btn svg { width: 18px; height: 18px; }
+
+/* ===== Filter chips ===== */
+.filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin: 0 -20px 14px;
+  padding-left: 20px; padding-right: 20px;
+}
+.filters::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.chip.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.chip:active { transform: scale(0.96); }
+
+/* custom range */
+.range {
+  display: none;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.range.show { display: flex; }
+.range input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  min-width: 0;
+}
+.range span { color: var(--text-3); font-size: 13px; }
+
+/* ===== Stats card ===== */
+.stats {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 20px 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.stats::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+  opacity: 0.4;
+}
+.stats-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.stats-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+.stats-toggles { display: flex; gap: 6px; }
+.toggle {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: all 0.15s;
+}
+.toggle.on {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.toggle:active { transform: scale(0.94); }
+
+.stats-total {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 52px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: "opsz" 144, "SOFT" 0;
+  margin-bottom: 10px;
+}
+.stats-total .currency {
+  font-size: 28px;
+  color: var(--accent);
+  margin-right: 6px;
+  vertical-align: 6px;
+  font-weight: 400;
+}
+.stats-meta {
+  font-size: 12px;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+  display: flex; gap: 14px; flex-wrap: wrap;
+}
+.stats-meta .dot { color: var(--text-3); }
+
+/* ===== List ===== */
+.list-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin: 4px 4px 14px;
+}
+.list-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.list-count {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.record {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.record:active { transform: scale(0.99); background: var(--surface-2); }
+.record-date {
+  text-align: center;
+  padding-right: 14px;
+  border-right: 1px solid var(--border);
+  min-width: 50px;
+}
+.record-day {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.record-month {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.record-breakdown {
+  font-size: 12px;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+.record-breakdown .lbl { color: var(--text-3); }
+.record-total {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-3);
+}
+.empty-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 18px;
+  margin-bottom: 6px;
+  color: var(--text-2);
+}
+.empty-sub { font-size: 13px; margin-bottom: 24px; }
+.empty-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 100px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.empty-add:active { transform: scale(0.95); }
+
+/* ===== FAB ===== */
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  display: grid; place-items: center;
+  cursor: pointer;
+  font-size: 28px;
+  font-weight: 300;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 10;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-family: 'Fraunces', serif;
+}
+.fab:active { transform: scale(0.9); }
+.fab svg { width: 24px; height: 24px; }
+
+/* ===== Sheet (modal) ===== */
+.sheet-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+.sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--bg);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  border-top: 1px solid var(--border);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 101;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+.sheet.show { transform: translateY(0); }
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.sheet-inner { padding: 18px 22px 8px; }
+.sheet-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 22px;
+  margin: 8px 0 22px;
+  letter-spacing: -0.01em;
+}
+
+.field { margin-bottom: 18px; }
+.field-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.field input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+}
+.btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: transparent;
+  flex: 0 0 auto;
+  padding: 14px 18px;
+}
+
+/* ===== Settings sheet ===== */
+.set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.set-row:last-child { border-bottom: none; }
+.set-label { font-size: 15px; }
+.set-value {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.set-row.action .set-label { color: var(--text); }
+.set-row.danger .set-label { color: var(--danger); }
+.set-row input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  width: 90px;
+  text-align: right;
+}
+.toast {
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s;
+  z-index: 200;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* prevent iOS zoom on input focus */
+@supports (-webkit-touch-callout: none) {
+  .field input, .range input, .set-row input { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <div>
+      <div class="brand">豆豆账本</div>
+      <div class="brand-sub" id="brandSub">— since 2026 —</div>
+    </div>
+    <button class="icon-btn" id="settingsBtn" aria-label="设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="filters" id="filters">
+    <button class="chip" data-filter="thisWeek">本周</button>
+    <button class="chip active" data-filter="thisMonth">本月</button>
+    <button class="chip" data-filter="lastMonth">上月</button>
+    <button class="chip" data-filter="thisYear">今年</button>
+    <button class="chip" data-filter="all">全部</button>
+    <button class="chip" data-filter="custom">自定义</button>
+  </div>
+
+  <div class="range" id="rangeBox">
+    <input type="date" id="rangeStart">
+    <span>→</span>
+    <input type="date" id="rangeEnd">
+  </div>
+
+  <div class="stats">
+    <div class="stats-head">
+      <span class="stats-label" id="statsLabel">本月</span>
+      <div class="stats-toggles">
+        <button class="toggle on" data-stat="cash">现金</button>
+        <button class="toggle on" data-stat="card">卡</button>
+        <button class="toggle on" data-stat="base">底薪</button>
+      </div>
+    </div>
+    <div class="stats-total"><span class="currency">$</span><span id="statsTotal">0</span></div>
+    <div class="stats-meta">
+      <span id="statsDays">0 天</span>
+      <span class="dot">·</span>
+      <span id="statsAvg">日均 ¥0</span>
+      <span class="dot">·</span>
+      <span id="statsCount">0 条记录</span>
+    </div>
+  </div>
+
+  <div class="list-head">
+    <span class="list-title">— 记录 —</span>
+    <span class="list-count" id="listCount"></span>
+  </div>
+  <div id="list"></div>
+</div>
+
+<button class="fab" id="addBtn" aria-label="新增">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<!-- Record sheet -->
+<div class="sheet-backdrop" id="recordBackdrop"></div>
+<div class="sheet" id="recordSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-inner">
+    <div class="sheet-title" id="sheetTitle">新增记录</div>
+    <div class="field">
+      <label class="field-label">日期</label>
+      <input type="date" id="fDate">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">现金小费</label>
+        <input type="number" id="fCash" inputmode="decimal" step="0.01" placeholder="0">
+      </div>
+      <div class="field">
+        <label class="field-label">卡小费</label>
+        <input type="number" id="fCard" inputmode="decimal" step="0.01" placeholder="0">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">底薪</label>
+      <input type="number" id="fBase" inputmode="decimal" step="0.01">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-danger" id="deleteBtn" style="display:none">删除</button>
+      <button class="btn" id="cancelBtn">取消</button>
+      <button class="btn btn-primary" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="sheet-backdrop" id="settingsBackdrop"></div>
+<div class="sheet" id="settingsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-inner">
+    <div class="sheet-title">设置</div>
+    <div class="set-row">
+      <span class="set-label">默认底薪</span>
+      <input type="number" id="defaultBaseInput" inputmode="decimal" step="0.01">
+    </div>
+    <div class="set-row action" id="exportJsonBtn">
+      <span class="set-label">导出 JSON 备份</span>
+      <span class="set-value">→</span>
+    </div>
+    <div class="set-row action" id="exportCsvBtn">
+      <span class="set-label">导出 CSV 表格</span>
+      <span class="set-value">→</span>
+    </div>
+    <div class="set-row action" id="importJsonBtn">
+      <span class="set-label">导入 JSON</span>
+      <span class="set-value">→</span>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+    <div class="set-row danger" id="clearBtn">
+      <span class="set-label">清空所有数据</span>
+      <span class="set-value">⚠</span>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn" id="settingsCloseBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =========== Storage ===========
+const KEY = 'tipdiary:v1';
+const KEY_BASE = 'tipdiary:defaultBase';
+const KEY_FILTER = 'tipdiary:filter';
+const KEY_STATS = 'tipdiary:stats';
+const KEY_RANGE = 'tipdiary:range';
+
+const state = {
+  records: JSON.parse(localStorage.getItem(KEY) || '[]'),
+  defaultBase: parseFloat(localStorage.getItem(KEY_BASE) || '100'),
+  filter: localStorage.getItem(KEY_FILTER) || 'thisMonth',
+  stats: JSON.parse(localStorage.getItem(KEY_STATS) || '{"cash":true,"card":true,"base":true}'),
+  range: JSON.parse(localStorage.getItem(KEY_RANGE) || '{"start":"","end":""}'),
+  editingId: null
+};
+
+function persist() {
+  localStorage.setItem(KEY, JSON.stringify(state.records));
+  localStorage.setItem(KEY_BASE, String(state.defaultBase));
+  localStorage.setItem(KEY_FILTER, state.filter);
+  localStorage.setItem(KEY_STATS, JSON.stringify(state.stats));
+  localStorage.setItem(KEY_RANGE, JSON.stringify(state.range));
+}
+
+// =========== Utils ===========
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtMoney(n) {
+  const v = Math.round(n * 100) / 100;
+  return v % 1 === 0 ? v.toLocaleString('en-US') : v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+function getRange() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  const pad = n => String(n).padStart(2,'0');
+  const iso = dt => `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+
+  switch (state.filter) {
+    case 'thisWeek': {
+      const day = now.getDay() || 7; // make Sunday=7 so Monday is start
+      const start = new Date(y, m, d - day + 1);
+      return { start: iso(start), end: iso(now), label: '本周' };
+    }
+    case 'thisMonth':
+      return { start: iso(new Date(y, m, 1)), end: iso(new Date(y, m+1, 0)), label: `${y}年${m+1}月` };
+    case 'lastMonth': {
+      const s = new Date(y, m-1, 1);
+      const e = new Date(y, m, 0);
+      return { start: iso(s), end: iso(e), label: `${s.getFullYear()}年${s.getMonth()+1}月` };
+    }
+    case 'thisYear':
+      return { start: `${y}-01-01`, end: `${y}-12-31`, label: `${y}年` };
+    case 'all':
+      return { start: '', end: '', label: '全部' };
+    case 'custom':
+      return { start: state.range.start, end: state.range.end, label: '自定义' };
+    default:
+      return { start: '', end: '', label: '' };
+  }
+}
+
+function filteredRecords() {
+  const { start, end } = getRange();
+  return state.records.filter(r => {
+    if (start && r.date < start) return false;
+    if (end && r.date > end) return false;
+    return true;
+  }).sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+}
+
+// =========== Render ===========
+function render() {
+  renderFilterChips();
+  renderRange();
+  renderStats();
+  renderList();
+}
+
+function renderFilterChips() {
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === state.filter);
+  });
+}
+
+function renderRange() {
+  const box = document.getElementById('rangeBox');
+  box.classList.toggle('show', state.filter === 'custom');
+  document.getElementById('rangeStart').value = state.range.start || '';
+  document.getElementById('rangeEnd').value = state.range.end || '';
+}
+
+function renderStats() {
+  const { label } = getRange();
+  document.getElementById('statsLabel').textContent = label;
+
+  const recs = filteredRecords();
+  let total = 0;
+  const days = new Set();
+  recs.forEach(r => {
+    if (state.stats.cash) total += +r.cash || 0;
+    if (state.stats.card) total += +r.card || 0;
+    if (state.stats.base) total += +r.base || 0;
+    days.add(r.date);
+  });
+
+  document.getElementById('statsTotal').textContent = fmtMoney(total);
+  document.getElementById('statsDays').textContent = `${days.size} 天`;
+  document.getElementById('statsAvg').textContent = `日均 $${days.size ? fmtMoney(total/days.size) : 0}`;
+  document.getElementById('statsCount').textContent = `${recs.length} 条记录`;
+
+  document.querySelectorAll('.toggle').forEach(t => {
+    t.classList.toggle('on', !!state.stats[t.dataset.stat]);
+  });
+}
+
+function renderList() {
+  const recs = filteredRecords();
+  const listEl = document.getElementById('list');
+  document.getElementById('listCount').textContent = recs.length ? `${recs.length} 条` : '';
+
+  if (!recs.length) {
+    listEl.innerHTML = `
+      <div class="empty">
+        <div class="empty-title">还没有记录</div>
+        <div class="empty-sub">添加第一笔记录开始使用</div>
+        <button class="empty-add" id="emptyAddBtn">+ 添加记录</button>
+      </div>`;
+    const emptyBtn = document.getElementById('emptyAddBtn');
+    if (emptyBtn) emptyBtn.addEventListener('click', () => openSheet(null));
+    return;
+  }
+
+  listEl.innerHTML = recs.map(r => {
+    const [Y, M, D] = r.date.split('-');
+    const cash = +r.cash || 0, card = +r.card || 0, base = +r.base || 0;
+    const dayTotal = cash + card + base;
+    return `
+      <div class="record" data-id="${r.id}">
+        <div class="record-date">
+          <div class="record-day">${parseInt(D)}</div>
+          <div class="record-month">${MONTH_ABBR[parseInt(M)-1]} · ${Y.slice(2)}</div>
+        </div>
+        <div class="record-breakdown">
+          <div><span class="lbl">现金</span> ${fmtMoney(cash)}　<span class="lbl">卡</span> ${fmtMoney(card)}</div>
+          <div><span class="lbl">底薪</span> ${fmtMoney(base)}</div>
+        </div>
+        <div class="record-total">${fmtMoney(dayTotal)}</div>
+      </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.record').forEach(el => {
+    el.addEventListener('click', () => openSheet(el.dataset.id));
+  });
+}
+
+// =========== Sheet ===========
+function openSheet(id) {
+  state.editingId = id || null;
+  const sheet = document.getElementById('recordSheet');
+  const backdrop = document.getElementById('recordBackdrop');
+  const title = document.getElementById('sheetTitle');
+  const delBtn = document.getElementById('deleteBtn');
+
+  if (id) {
+    const r = state.records.find(x => x.id === id);
+    if (!r) return;
+    title.textContent = '编辑记录';
+    document.getElementById('fDate').value = r.date;
+    document.getElementById('fCash').value = r.cash;
+    document.getElementById('fCard').value = r.card;
+    document.getElementById('fBase').value = r.base;
+    delBtn.style.display = '';
+  } else {
+    title.textContent = '新增记录';
+    document.getElementById('fDate').value = todayStr();
+    document.getElementById('fCash').value = '';
+    document.getElementById('fCard').value = '';
+    document.getElementById('fBase').value = state.defaultBase;
+    delBtn.style.display = 'none';
+  }
+  backdrop.classList.add('show');
+  sheet.classList.add('show');
+}
+
+function closeSheet() {
+  document.getElementById('recordBackdrop').classList.remove('show');
+  document.getElementById('recordSheet').classList.remove('show');
+  state.editingId = null;
+}
+
+function saveRecord() {
+  const date = document.getElementById('fDate').value;
+  if (!date) { toast('请选择日期'); return; }
+  const cash = parseFloat(document.getElementById('fCash').value) || 0;
+  const card = parseFloat(document.getElementById('fCard').value) || 0;
+  const base = parseFloat(document.getElementById('fBase').value) || 0;
+
+  if (state.editingId) {
+    const i = state.records.findIndex(r => r.id === state.editingId);
+    if (i >= 0) state.records[i] = { ...state.records[i], date, cash, card, base };
+    toast('已更新');
+  } else {
+    state.records.push({ id: String(Date.now()) + Math.random().toString(36).slice(2,6), date, cash, card, base });
+    toast('已添加');
+  }
+  persist();
+  closeSheet();
+  render();
+}
+
+function deleteRecord() {
+  if (!state.editingId) return;
+  if (!confirm('删除这条记录?')) return;
+  state.records = state.records.filter(r => r.id !== state.editingId);
+  persist();
+  closeSheet();
+  render();
+  toast('已删除');
+}
+
+// =========== Settings ===========
+function openSettings() {
+  document.getElementById('defaultBaseInput').value = state.defaultBase;
+  document.getElementById('settingsBackdrop').classList.add('show');
+  document.getElementById('settingsSheet').classList.add('show');
+}
+function closeSettings() {
+  document.getElementById('settingsBackdrop').classList.remove('show');
+  document.getElementById('settingsSheet').classList.remove('show');
+}
+
+function exportJSON() {
+  const data = JSON.stringify({
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    defaultBase: state.defaultBase,
+    records: state.records
+  }, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tip-diary-${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('已导出 JSON');
+}
+
+function exportCSV() {
+  const header = '日期,现金小费,卡小费,底薪,当日合计\n';
+  const rows = [...state.records]
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .map(r => {
+      const t = (+r.cash||0) + (+r.card||0) + (+r.base||0);
+      return `${r.date},${r.cash||0},${r.card||0},${r.base||0},${t}`;
+    }).join('\n');
+  const blob = new Blob(['\uFEFF' + header + rows], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tip-diary-${todayStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('已导出 CSV');
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const obj = JSON.parse(e.target.result);
+      if (!obj.records || !Array.isArray(obj.records)) throw new Error('格式错误');
+      const ok = confirm(`将导入 ${obj.records.length} 条记录,会与现有记录合并。继续?`);
+      if (!ok) return;
+      // merge by id
+      const map = new Map(state.records.map(r => [r.id, r]));
+      obj.records.forEach(r => {
+        if (r.id && r.date) map.set(r.id, r);
+      });
+      state.records = [...map.values()];
+      if (typeof obj.defaultBase === 'number') state.defaultBase = obj.defaultBase;
+      persist();
+      render();
+      toast(`已导入 ${obj.records.length} 条`);
+    } catch (err) {
+      alert('导入失败: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if (!confirm('确定清空全部记录吗?此操作不可撤销。建议先导出备份。')) return;
+  if (!confirm('再次确认: 真的要清空全部数据吗?')) return;
+  state.records = [];
+  persist();
+  render();
+  closeSettings();
+  toast('已清空');
+}
+
+// =========== Toast ===========
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// =========== Events ===========
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    state.filter = c.dataset.filter;
+    if (state.filter === 'custom' && !state.range.start) {
+      // default custom to current month
+      const r = getRange();
+      const now = new Date();
+      const y = now.getFullYear(), m = now.getMonth();
+      const pad = n => String(n).padStart(2,'0');
+      state.range = {
+        start: `${y}-${pad(m+1)}-01`,
+        end: `${y}-${pad(m+1)}-${pad(new Date(y, m+1, 0).getDate())}`
+      };
+    }
+    persist();
+    render();
+  });
+});
+
+document.getElementById('rangeStart').addEventListener('change', e => {
+  state.range.start = e.target.value;
+  persist();
+  render();
+});
+document.getElementById('rangeEnd').addEventListener('change', e => {
+  state.range.end = e.target.value;
+  persist();
+  render();
+});
+
+document.querySelectorAll('.toggle').forEach(t => {
+  t.addEventListener('click', () => {
+    state.stats[t.dataset.stat] = !state.stats[t.dataset.stat];
+    persist();
+    renderStats();
+  });
+});
+
+document.getElementById('addBtn').addEventListener('click', () => openSheet(null));
+document.getElementById('cancelBtn').addEventListener('click', closeSheet);
+document.getElementById('recordBackdrop').addEventListener('click', closeSheet);
+document.getElementById('saveBtn').addEventListener('click', saveRecord);
+document.getElementById('deleteBtn').addEventListener('click', deleteRecord);
+
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsCloseBtn').addEventListener('click', closeSettings);
+document.getElementById('settingsBackdrop').addEventListener('click', closeSettings);
+
+document.getElementById('defaultBaseInput').addEventListener('change', e => {
+  const v = parseFloat(e.target.value);
+  if (!isNaN(v) && v >= 0) {
+    state.defaultBase = v;
+    persist();
+    toast('默认底薪已更新');
+  }
+});
+
+document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+document.getElementById('importJsonBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', e => {
+  if (e.target.files[0]) importJSON(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+// init
+render();
+</script>
+</body>
+</html>
